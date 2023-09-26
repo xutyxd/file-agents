@@ -22,6 +22,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup
+        uses: actions/setup-node@v3
         with:
           node-version: '20.x'
         run: |
@@ -30,12 +31,14 @@ jobs:
         id: cache-deps
 
       - name: Test
+        uses: actions/setup-node@v3
         with:
             node-version: '20.x'
         run: |
           npm run test
 
       - name: Build
+        uses: actions/setup-node@v3
         with:
           node-version: '20.x'
         run: |
@@ -43,6 +46,7 @@ jobs:
         id: cache-build
 
       - name: Release
+        uses: actions/setup-node@v3
         with:
           node-version: '20.x'
         run: |
