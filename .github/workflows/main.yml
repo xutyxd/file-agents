@@ -17,38 +17,28 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          node-version: '20.x'
         with:
           fetch-depth: 0
 
       - name: Setup
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20.x'
         run: |
           npm install
           npm ci --cache .npm
         id: cache-deps
 
       - name: Test
-        uses: actions/setup-node@v3
-        with:
-            node-version: '20.x'
         run: |
           npm run test
 
       - name: Build
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20.x'
         run: |
           npm run build
         id: cache-build
 
       - name: Release
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20.x'
         run: |
           npx semantic-release
         env:
