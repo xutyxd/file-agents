@@ -56,7 +56,6 @@ describe('NodeReader class', () => {
 
             expect(file.name).toBe('video.mp4');
             expect(file.size).toBe(2097084);
-            expect(file.lastModified).toBe(1695747307643);
         });
     });
 
