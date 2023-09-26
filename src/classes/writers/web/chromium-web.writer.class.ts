@@ -2,14 +2,21 @@ import { IWriter } from "../../../interfaces/writer.interface";
 
 export class ChromiumWebWriter implements IWriter<WriteParams['data']> {
     
-    private folder!: FileSystemDirectoryHandle;
+    // private folder!: FileSystemDirectoryHandle;
     private writable!: FileSystemWritableFileStream;
 
-    constructor(private file: { size: number, name: string }, onReady?: Function) {
-        this.init(file, onReady);
+    public on!: {
+        ready: Promise<void>
     }
 
-    private async init(file: { size: number, name: string }, onReady?: Function) {
+    constructor(file: { size: number, name: string }) {
+    
+        this.on = {
+            ready: this.init(file)
+        }
+    }
+
+    private async init(file: { size: number, name: string }) {
         // Get folder
         const folder = await (window as any).showSaveFilePicker() as FileSystemDirectoryHandle; 
         // Get handle for file
@@ -18,10 +25,7 @@ export class ChromiumWebWriter implements IWriter<WriteParams['data']> {
         this.writable = await fileHandler.createWritable({ keepExistingData: false });
         // Truncate needed to avoid error on position that not exist
         this.writable.truncate(file.size);
-        // If callback execute it
-        if (onReady) {
-            onReady();
-        }
+        
     }
 
     public async write(data: WriteParams['data'], position: number) {

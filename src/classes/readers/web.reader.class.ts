@@ -1,42 +1,35 @@
 import { IReader } from "../../interfaces/reader.interface";
+import { ChromiumWebReader } from "./web/chromium-web.reader.class";
+import { GenericWebReader } from "./web/generic-web.reader.class";
 
 export class WebReader implements IReader {
 
-    private readables: File[] = [];
+    private reader!: IReader;
 
-    constructor(onReady?: Function) {
-        this.init(onReady);
+    public on!: {
+        ready: Promise<void>
     }
 
-    private init(onReady?: Function) {
-        const input = document.createElement('input');
-        input.type = 'file';
-
-        input.onchange = () => {
-            this.readables = [ ...input.files as FileList ];
-
-            input.remove();
-
-            if(onReady && typeof onReady === 'function') {
-                onReady();
-            }
+    constructor() {
+        this.on = {
+            ready: this.init()
         }
+    }
 
-        input.click();
+    private init() {
+        const ctor = (window as any).showOpenFilePicker ? ChromiumWebReader : GenericWebReader;
+        const reader = new ctor();
+
+        this.reader = reader;
+        return reader.on.ready;
     }
 
     public files() {
-        return this.readables.map((file) => {
-            const { name, lastModified, size, type } = file;
-            return { name, lastModified, size, type };
-        });
+        return this.reader.files();
     }
 
-    public async read(options: { start: number, end: number}, index = 0) {
-        const file = this.readables[index];
-        const { start, end } = options;
-        
-        return file.slice(start, end);
+    public read(options: { start: number, end: number}, index = 0) {
+        return this.reader.read(options, index);
     }
 
 }

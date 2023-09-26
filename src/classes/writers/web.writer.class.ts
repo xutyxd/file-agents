@@ -6,17 +6,23 @@ import { GenericWebWriter } from "./web/generic-web.writer.class";
 export class WebWriter implements IWriter<WriteParams['data']> {
     private writer: IWriter<WriteParams['data']>;
 
-    constructor(file: { size: number, name: string }, onReady?: Function) {
+    public on!: {
+        ready: Promise<void>
+    }
 
-        if ((window as any).showDirectoryPicker) {
-            this.writer = new ChromiumWebWriter(file, onReady);   
-        } else {
-            this.writer = new GenericWebWriter(file, onReady);
+    constructor(file: { size: number, name: string }) {
+        const ctor = (window as any).showDirectoryPicker ? ChromiumWebWriter : GenericWebWriter;
+        const writer = new ctor(file);
+
+        this.writer = writer;
+
+        this.on = {
+            ready: writer.on.ready
         }
     }
 
     public async write(data: WriteParams['data'], position: number) {
-        this.writer.write(data, position);
+        return this.writer.write(data, position);
     }
 
     public async close() {

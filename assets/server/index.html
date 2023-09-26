@@ -1,0 +1,76 @@
+<html>
+    <head>
+        <script src="./scripts/web.js" type="module"></script>
+        <script type="module">
+            import { WebReader, WebWriter } from './scripts/web.js';
+
+            let webReader, webWriter;
+
+            const createFileNode = (file, index) => {
+                const fileContainer = document.createElement('div');
+
+                const fileName = document.createElement('div');
+                const fileSize = document.createElement('div');
+                const fileButton = document.createElement('button');
+
+                fileName.innerHTML = `Name: ${file.name}`;
+                fileSize.innerHTML = `Size: ${file.size}`;
+
+                fileButton.textContent = 'Download';
+                fileButton.onclick = async () => {
+                    console.log('File: ', file);
+                    const webWriter = new WebWriter({ name: file.name, size: file.size });
+                    await webWriter.on.ready;
+
+                    console.log('Writer ready!');
+                    fileButton.remove();
+
+                    // Start reading in a loop
+                    const chunkSize = 1e+7;
+                    let finished = false;
+                    let cursor = 0;
+
+                    while(!finished) {
+                        const chunk = webReader.read({ start: cursor, end: (cursor + chunkSize) }, index);
+                        await webWriter.write(chunk, cursor);
+                        cursor += chunk.size;
+
+                        console.log('Chunk: ', chunk);
+                        finished = cursor >= file.size;
+                    }
+
+                    webWriter.close();
+                }
+
+                [fileName, fileSize, fileButton].forEach((node) => fileContainer.append(node));
+                return fileContainer;
+            }
+
+            const listFiles = () => {
+                const filesContainer = document.querySelector('.files');
+                const files = webReader.files();
+                const htmlFiles = files.map(createFileNode);
+
+                htmlFiles.forEach((node) => filesContainer.append(node));
+
+            }
+
+            const readerButton = document.createElement('button');
+            readerButton.textContent = 'Read files';
+
+            readerButton.onclick = async () => {
+                webReader = new WebReader();
+                await webReader.on.ready;
+                listFiles();
+            }
+
+            document.body.append(readerButton);
+
+        </script>
+    </head>
+    <body>
+        <div class="files">
+
+        </div>
+    </body>
+</html>
