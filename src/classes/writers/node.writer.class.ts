@@ -7,11 +7,17 @@ export class NodeWriter implements IWriter<Buffer> {
 
     private writable!: number;
 
-    constructor(file: { size: number, name: string }, path = '',  onReady?: Function) {
-        this.init(file, path, onReady);
+    public on!: {
+        ready: Promise<void>
     }
 
-    private async init(file: { size: number, name: string }, where: string,  onReady?: Function) {
+    constructor(file: { size: number, name: string }, path = '.',) {
+        this.on = {
+            ready: this.init(file, path)
+        }
+    }
+
+    private async init(file: { size: number, name: string }, where: string) {
         const exist = existsSync(where);
 
         if (!exist) {

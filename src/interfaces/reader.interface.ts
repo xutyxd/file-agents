@@ -8,5 +8,5 @@ export interface IReader {
         type: string;
     }[]
 
-    read(options: { start: number, end: number }, index?: number): Promise<Blob>;
+    read(options: { start: number, end: number }, index?: number): Promise<Blob> | Blob;
 }

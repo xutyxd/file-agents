@@ -15,10 +15,14 @@ export class WebReader implements IReader {
         input.onchange = () => {
             this.readables = [ ...input.files as FileList ];
 
+            input.remove();
+
             if(onReady && typeof onReady === 'function') {
                 onReady();
             }
         }
+
+        input.click();
     }
 
     public files() {
