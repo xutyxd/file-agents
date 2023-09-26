@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-and-release:
-    runs-on: ubuntu-latest
+    runs-on: node-20
     permissions:
       contents: write # to be able to publish a GitHub release
       issues: write # to be able to comment on released issues
@@ -22,21 +22,29 @@ jobs:
           fetch-depth: 0
 
       - name: Setup
+        with:
+          node-version: '20.x'
         run: |
           npm install
           npm ci --cache .npm
         id: cache-deps
 
       - name: Test
+        with:
+            node-version: '20.x'
         run: |
           npm run test
 
       - name: Build
+        with:
+          node-version: '20.x'
         run: |
           npm run build
         id: cache-build
 
       - name: Release
+        with:
+          node-version: '20.x'
         run: |
           npx semantic-release
         env:
