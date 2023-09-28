@@ -55,8 +55,8 @@ export class GenericWebReader implements IReader {
         const readables = await this.get();
 
         return readables.map((file) => {
-            const { name, lastModified, size, type } = file;
-            return { name, lastModified, size, type };
+            const { name, lastModified, size, type, uuid } = file;
+            return { name, lastModified, size, type, uuid };
         });
     }
 

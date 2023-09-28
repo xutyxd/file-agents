@@ -20,18 +20,18 @@
                 fileButton.onclick = async () => {
                     console.log('File: ', file);
                     const webWriter = new WebWriter({ name: file.name, size: file.size });
-                    await webWriter.on.ready;
 
                     console.log('Writer ready!');
                     fileButton.remove();
 
                     // Start reading in a loop
+                    const { uuid } = file;
                     const chunkSize = 1e+7;
                     let finished = false;
                     let cursor = 0;
-
+                    return;
                     while(!finished) {
-                        const chunk = webReader.read({ start: cursor, end: (cursor + chunkSize) }, index);
+                        const chunk = webReader.read({ start: cursor, end: (cursor + chunkSize) }, uuid);
                         await webWriter.write(chunk, cursor);
                         cursor += chunk.size;
 
@@ -46,9 +46,10 @@
                 return fileContainer;
             }
 
-            const listFiles = () => {
+            const listFiles = async () => {
                 const filesContainer = document.querySelector('.files');
-                const files = webReader.files();
+                const files = await webReader.files();
+                console.log('Files: ', files);
                 const htmlFiles = files.map(createFileNode);
 
                 htmlFiles.forEach((node) => filesContainer.append(node));
@@ -60,7 +61,6 @@
 
             readerButton.onclick = async () => {
                 webReader = new WebReader();
-                await webReader.on.ready;
                 listFiles();
             }
 
