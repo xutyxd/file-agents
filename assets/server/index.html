@@ -29,13 +29,12 @@
                     const chunkSize = 1e+7;
                     let finished = false;
                     let cursor = 0;
-                    return;
+
                     while(!finished) {
-                        const chunk = webReader.read({ start: cursor, end: (cursor + chunkSize) }, uuid);
+                        const chunk = await webReader.read({ start: cursor, end: (cursor + chunkSize) }, uuid);
                         await webWriter.write(chunk, cursor);
                         cursor += chunk.size;
 
-                        console.log('Chunk: ', chunk);
                         finished = cursor >= file.size;
                     }
 
