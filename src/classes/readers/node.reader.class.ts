@@ -3,21 +3,17 @@ import { join } from 'path';
 
 import { IReader } from "../../interfaces/reader.interface";
 
+type Readable = Blob & { lastModified: number, uuid: string };
+
 export class NodeReader implements IReader {
 
-    private readables: (Blob & { lastModified: number })[] = [];
+    private readables?: Promise<Readable[]> | Readable[];
+    private selected?: string;
 
-    public on!: {
-        ready: Promise<void>
-    }
+    constructor(private path = '.') { }
 
-    constructor(path = '.') {
-        this.on = {
-            ready: this.init(path)
-        }
-    }
-
-    private async init(where: string) {
+    private async list() {
+        const where = this.path;
         const exist = existsSync(where);
 
         if (!exist) {
@@ -46,24 +42,53 @@ export class NodeReader implements IReader {
                     value: name,
                     writable: false
                 },
+                uuid: {
+                    value: crypto.randomUUID(),
+                    writable: false
+                }
               });
 
-            return blob as Blob & { lastModified: number };
+            return blob as Blob & { lastModified: number, uuid: string };
         }));
+
+        return this.readables;
     }
 
-    public files() {
-        return this.readables.map((file) => {
-            const { name, lastModified, size, type } = file;
-            return { name, lastModified, size, type };
+    private get = async () => {
+        let readables = this.readables;
+
+        if (!readables) {
+            readables = this.list();
+        }
+
+        if (readables instanceof Promise) {
+            readables = await readables;
+        }
+
+        return readables;
+    }
+
+    public async files() {
+
+        const readables = await this.get();
+
+        return readables.map((file) => {
+            const { name, lastModified, size, type, uuid } = file;
+            return { name, lastModified, size, type, uuid };
         });
     }
 
-    public read(options: { start: number, end: number}, index = 0): Blob {
-        const file = this.readables[index];
+    public async read(options: { start: number, end: number}, selected = this.selected): Promise<Blob> {
+        if (!selected) {
+            throw new Error(`File not selected.`);
+        }
+
+        const readables = await this.get();
+
+        const file = readables.find(({ uuid }) => uuid === selected);
 
         if (!file) {
-            throw new Error(`File index selected out of range. Valid range: 0 - ${this.readables.length - 1}`);
+            throw new Error('File selected not found on list.');
         }
 
         const { start, end } = options;

@@ -9,8 +9,8 @@ describe('NodeWriter class', () => {
             let result: NodeWriter | Error;
 
             try {
-                result = new NodeWriter({ name: 'test', size: 15 }, 'assetss');
-                await result.on.ready;
+                result = new NodeWriter({ name: 'test' }, 'assetss');
+                await result.write(Buffer.from([]), 0);
             } catch(e) {
                 result = e as Error;
             }
@@ -22,8 +22,8 @@ describe('NodeWriter class', () => {
             let result: NodeWriter | Error;
 
             try {
-                result = new NodeWriter({ name: 'test', size: 15 }, `${assets}/video.mp4`);
-                await result.on.ready;
+                result = new NodeWriter({ name: 'test' }, `${assets}/video.mp4`);
+                await result.write(Buffer.from([]), 0);
             } catch(e) {
                 result = e as Error;
             }
@@ -32,15 +32,13 @@ describe('NodeWriter class', () => {
         });
         it('should instance', async () => {
 
-            const nodeWriter = new NodeWriter({ name: 'test.test', size: 15 }, './test');
-            await nodeWriter.on.ready;
+            const nodeWriter = new NodeWriter({ name: 'test.test' }, './test');
 
             expect(nodeWriter).toBeInstanceOf(NodeWriter);
         });
 
         it('should instance without specified path', async () => {
-            const nodeWriter = new NodeWriter({ name: 'test.test', size: 15 });
-            await nodeWriter.on.ready;
+            const nodeWriter = new NodeWriter({ name: 'test.test' });
 
             expect(nodeWriter).toBeInstanceOf(NodeWriter);
         });
@@ -48,8 +46,7 @@ describe('NodeWriter class', () => {
 
     describe('NodeWriter write', () => {
         it('should write', async () => {
-            const nodeWriter = new NodeWriter({ name: 'test.test', size: 15 }, './test');
-            await nodeWriter.on.ready;
+            const nodeWriter = new NodeWriter({ name: 'test.test' }, './test');
 
             const blob = new Blob([0, 1, 2, 3, 4] as unknown as BlobPart[]);
             const arrayBuffer = await blob.arrayBuffer();
@@ -58,20 +55,18 @@ describe('NodeWriter class', () => {
             await nodeWriter.write(buffer, 0);
 
             const nodeReader = new NodeReader('./test');
-            await nodeReader.on.ready;
 
-            const files = nodeReader.files();
-            const file = files.findIndex(({ name }) => name === 'test.test');
+            const files = await nodeReader.files();
+            const { uuid } = files.find(({ name }) => name === 'test.test') as typeof files[number];
 
-            const readed = nodeReader.read({ start: 0, end: 5 }, file);
+            const readed = await nodeReader.read({ start: 0, end: 5 }, uuid);
             const text = await readed.text();
 
             expect(text).toBe('01234');
         });
 
         it('should write in the middle', async () => {
-            const nodeWriter = new NodeWriter({ name: 'test.test', size: 15 }, './test');
-            await nodeWriter.on.ready;
+            const nodeWriter = new NodeWriter({ name: 'test.test' }, './test');
 
             const blob = new Blob([0, 1, 2, 3, 4] as unknown as BlobPart[]);
             const arrayBuffer = await blob.arrayBuffer();
@@ -81,12 +76,11 @@ describe('NodeWriter class', () => {
             await nodeWriter.write(buffer, 1);
 
             const nodeReader = new NodeReader('./test');
-            await nodeReader.on.ready;
 
-            const files = nodeReader.files();
-            const file = files.findIndex(({ name }) => name === 'test.test');
+            const files = await nodeReader.files();
+            const { uuid } = files.find(({ name }) => name === 'test.test') as typeof files[number];
 
-            const readed = nodeReader.read({ start: 0, end: 6 }, file);
+            const readed = await nodeReader.read({ start: 0, end: 6 }, uuid);
             const text = await readed.text();
 
             expect(text).toBe('001234');
@@ -95,8 +89,7 @@ describe('NodeWriter class', () => {
 
     describe('NodeWriter close', () => {
         it('should throw an error if try to write on closed file', async () => {
-            const nodeWriter = new NodeWriter({ name: 'test.test', size: 15 }, './test');
-            await nodeWriter.on.ready;
+            const nodeWriter = new NodeWriter({ name: 'test.test' }, './test');
 
             await nodeWriter.close();
 
@@ -115,8 +108,7 @@ describe('NodeWriter class', () => {
             expect((result as Error).message).toBe('EBADF: bad file descriptor, write');
         });
         it('should close', async () => {
-            const nodeWriter = new NodeWriter({ name: 'test.test', size: 15 }, './test');
-            await nodeWriter.on.ready;
+            const nodeWriter = new NodeWriter({ name: 'test.test' }, './test');
 
             const result = await nodeWriter.close();
 

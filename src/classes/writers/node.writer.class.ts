@@ -5,19 +5,14 @@ import { IWriter } from "../../interfaces/writer.interface";
 
 export class NodeWriter implements IWriter<Buffer> {
 
-    private writable!: number;
+    private writable?: Promise<number> | number;
 
-    public on!: {
-        ready: Promise<void>
-    }
+    constructor(private file: { name: string }, private path = '.',) { }
 
-    constructor(file: { size: number, name: string }, path = '.',) {
-        this.on = {
-            ready: this.init(file, path)
-        }
-    }
+    private async create() {
+        const { name } = this.file;
+        const where = this.path;
 
-    private async init(file: { size: number, name: string }, where: string) {
         const exist = existsSync(where);
 
         if (!exist) {
@@ -30,18 +25,38 @@ export class NodeWriter implements IWriter<Buffer> {
             throw new Error('Selected folder is not a folder.');
         }
 
-        const path = join(where, file.name);
+        const path = join(where, name);
         this.writable = openSync(path, 'w+');
+
+        return this.writable;
+    }
+
+    private get = async () => {
+        let writable = this.writable;
+
+        if (!writable) {
+            writable = this.create();
+        }
+
+        if (writable instanceof Promise) {
+            writable = await writable;
+        }
+
+        return writable;
     }
 
     public async write(data: Buffer, position: number) {
+        const writable = await this.get();
+
         await new Promise<void>((resolve, reject) => {
-            write(this.writable, data, 0, undefined, position, (err) => err ? reject(err) : resolve());
+            write(writable, data, 0, undefined, position, (err) => err ? reject(err) : resolve());
         });
     };
 
     public async close() {
-        await new Promise((resolve) => close(this.writable, resolve));
+        const writable = await this.get();
+
+        await new Promise((resolve) => close(writable, resolve));
     }
 }
 

@@ -1,12 +1,12 @@
 
 export interface IReader {
     
-    files(): {
+    files(): Promise<{
         name: string;
         lastModified: number;
         size: number;
         type: string;
-    }[]
+    }[]>;
 
-    read(options: { start: number, end: number }, index?: number): Promise<Blob> | Blob;
+    read(options: { start: number, end: number }, file?: string): Promise<Blob> | Blob;
 }

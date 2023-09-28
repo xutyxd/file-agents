@@ -3,33 +3,46 @@ import { IWriter } from "../../../interfaces/writer.interface";
 export class GenericWebWriter implements IWriter<WriteParams['data']> {
 
     private folder!: FileSystemDirectoryHandle;
-    private writable!: FileSystemWritableFileStream;
+    private writable?: Promise<FileSystemWritableFileStream> | FileSystemWritableFileStream;
 
-    public on!: {
-        ready: Promise<void>
-    }
+    constructor(private file: { size: number, name: string }) { }
 
-    constructor(private file: { size: number, name: string }) {
-        this.on = {
-            ready: this.init(file)
-        }
-    }
+    private async create(): Promise<FileSystemWritableFileStream> {
 
-    private async init(file: { size: number, name: string }) {
+        const { name, size } = this.file;
         // Get folder
         const folder = this.folder = await navigator.storage.getDirectory();
         // Get handle for file
-        const fileHandler = await folder.getFileHandle(file.name, { create: true });
+        const fileHandler = await folder.getFileHandle(name, { create: true });
         // Get writable
         this.writable = await fileHandler.createWritable({ keepExistingData: false });
         // Truncate needed to avoid error on position that not exist
-        this.writable.truncate(file.size);
+        this.writable.truncate(size);
+
+        return this.writable;
+    }
+
+    private get = async () => {
+        let writable = this.writable;
+
+        if (!writable) {
+            writable = this.create();
+        }
+
+        if (writable instanceof Promise) {
+            writable = await writable;
+        }
+
+        return writable;
     }
 
 
     public async write(data: WriteParams['data'], position: number) {
+
+        const writable = await this.get();
+
         try {
-            await this.writable.write({ type: 'write', position, data });
+            await writable.write({ type: 'write', position, data });
         } catch(e) {
             console.log('Error writing...', e);
             throw e;
@@ -37,8 +50,10 @@ export class GenericWebWriter implements IWriter<WriteParams['data']> {
     };
 
     public async close() {
+        const writable = await this.get();
+
         try {
-            await this.writable.close();
+            await writable.close();
         } catch(e) {
             console.log('Error closing: ', e);
             throw e;
