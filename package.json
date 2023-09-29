@@ -23,7 +23,7 @@
     "build": "npm run build:commonjs && npm run build:mjs && ./fixup.sh",
     "clean": "npm prune --production",
     "test": "npm run build:test && jest ./test --coverage",
-    "test:server": "node ./assets/server/index.js"
+    "test:server": "npm run build:mjs && node ./assets/server/index.js"
   },
   "repository": {
     "type": "git",

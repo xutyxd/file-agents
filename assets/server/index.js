@@ -8,3 +8,5 @@ app.use(express.static('./assets/server'));
 app.use('/scripts', express.static('./mjs'));
 
 app.listen(port);
+
+console.log(`Server listening on http://localhost:${ port }`);

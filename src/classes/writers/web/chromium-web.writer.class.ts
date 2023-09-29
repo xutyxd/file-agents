@@ -10,7 +10,7 @@ export class ChromiumWebWriter implements IWriter<WriteParams['data']> {
 
         const { name, size } = this.file;
         // Get folder
-        const folder = await (window as any).showSaveFilePicker() as FileSystemDirectoryHandle; 
+        const folder = await (window as any).showDirectoryPicker() as FileSystemDirectoryHandle; 
         // Get handle for file
         const fileHandler = await folder.getFileHandle(name, { create: true });
         // Get writable
