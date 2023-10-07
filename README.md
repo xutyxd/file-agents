@@ -2,6 +2,10 @@
 
 The objetive of the repository is to provide classes to read and write with the same interface for Node and Web.
 
+#### NPM package
+https://www.npmjs.com/package/file-agents
+
+
 ## Description
 
 There are four "agents", two for Node and another two for web.
@@ -19,7 +23,7 @@ List files:
 
 ``` ts
 // Import reader for web
-import { WebReader } from 'file-agents/web';
+import { WebReader } from 'file-agents';
 // Instance reader
 const webReader = new WebReader();
 // List files
@@ -32,7 +36,7 @@ console.log('Files: ', files);
 Read from file:
 ``` ts
 // Import reader for web
-import { WebReader } from 'file-agents/web';
+import { WebReader } from 'file-agents';
 // Instance reader
 const webReader = new WebReader();
 // List files
@@ -48,7 +52,7 @@ console.log('Blob: ', blob);
 Read from file and write
 
 ``` ts
-import { WebReader, WebWriter } from 'file-agents/web';
+import { WebReader, WebWriter } from 'file-agents';
 // Instance reader
 const webReader = new WebReader();
 // List files
@@ -81,7 +85,7 @@ List files:
 
 ``` ts
 // Import reader for node
-import { NodeReader } from 'file-agents/node';
+import { NodeReader } from 'file-agents';
 // Instance reader
 const nodeReader = new NodeReader();
 // List files
@@ -94,7 +98,7 @@ console.log('Files: ', files);
 Read from file:
 ``` ts
 // Import reader for node
-import { NodeReader } from 'file-agents/node';
+import { NodeReader } from 'file-agents';
 // Instance reader
 const nodeReader = new NodeReader();
 // List files
@@ -110,7 +114,7 @@ console.log('Blob: ', blob);
 Read from file and write
 
 ``` ts
-import { NodeReader, NodeWriter } from 'file-agents/node';
+import { NodeReader, NodeWriter } from 'file-agents';
 // Instance reader
 const nodeReader = new NodeReader();
 // List files
