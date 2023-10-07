@@ -17,8 +17,8 @@
   ],
   "scripts": {
     "tsc": "tsc",
-    "build:commonjs": "rm -fr cjs/* && tsc -p tsconfig-cjs.json",
-    "build:test": "rm -fr test/* && tsc -p tsconfig-test.json",
+    "build:commonjs": "rm -fr cjs/* && tsc -p tsconfig-cjs.json && bash cjs-formatter.sh",
+    "build:test": "rm -fr test/* && tsc -p tsconfig-test.json && bash cjs-formatter.sh",
     "build:mjs": "rm -fr mjs/* && tsc -p tsconfig.json && bash mjs-formatter.sh",
     "build": "npm run build:commonjs && npm run build:mjs && ./fixup.sh",
     "clean": "npm prune --production",
