@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { IReader } from "../../interfaces/reader.interface";
 
-type Readable = Blob & { lastModified: number, uuid: string };
+type Readable = Blob & { lastModified: number, uuid: string, name: string };
 
 export class NodeReader implements IReader {
 
@@ -48,7 +48,7 @@ export class NodeReader implements IReader {
                 }
               });
 
-            return blob as Blob & { lastModified: number, uuid: string };
+            return blob as Readable;
         }));
 
         return this.readables;
