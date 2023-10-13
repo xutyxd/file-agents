@@ -37,7 +37,11 @@ export class GenericWebWriter implements IWriter<WriteParams['data']> {
     }
 
 
-    public async write(data: WriteParams['data'], position: number) {
+    public async write(data: WriteParams['data'], position: number, where?: { path?: string, name: string }) {
+
+        if (where) {
+            console.warn('Parameter "where" is not supported on web currently');
+        }
 
         const writable = await this.get();
 
@@ -49,7 +53,12 @@ export class GenericWebWriter implements IWriter<WriteParams['data']> {
         } 
     };
 
-    public async close() {
+    public async close(where?: { path?: string, name: string }) {
+        
+        if (where) {
+            console.warn('Parameter "where" is not supported on web currently');
+        }
+
         const writable = await this.get();
 
         try {

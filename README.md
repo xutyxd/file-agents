@@ -123,7 +123,7 @@ const files = await nodeReader.files();
 const [ file ] = files;
 const { uuid, name, size } = file;
 
-const nodeWriter = new NodeWriter({ name, size });
+const nodeWriter = new NodeWriter({ name });
 const chunkSize = 1e+7; // 10Mb
 
 // Start reading in a loop
@@ -139,4 +139,35 @@ while(!finished) {
 }
 
 nodeWriter.close();
+```
+
+Read from file and write using where param on write, allowing to reuse same instance
+
+```ts
+import { NodeReader, NodeWriter } from 'file-agents';
+// Instance reader
+const nodeReader = new NodeReader();
+// List files
+const files = await nodeReader.files();
+// Select one, normally user select it
+const [ file ] = files;
+const { uuid, name, size } = file;
+
+const nodeWriter = new NodeWriter();
+const where = { file: name, path: './Downloads' };
+const chunkSize = 1e+7; // 10Mb
+
+// Start reading in a loop
+let finished = false;
+let cursor = 0;
+
+while(!finished) {
+    const chunk = await nodeReader.read({ start: cursor, end: (cursor + chunkSize) }, uuid);
+    await nodeWriter.write(chunk, cursor);
+    cursor += chunk.size;
+
+    finished = cursor >= file.size;
+}
+// Using where param to close file
+nodeWriter.close(where);
 ```
