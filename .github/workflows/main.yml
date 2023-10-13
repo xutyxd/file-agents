@@ -30,15 +30,15 @@ jobs:
           npm install
           npm ci --cache .npm
         id: cache-deps
-
-      - name: Test
-        run: |
-          npm run test
-
+      
       - name: Build
         run: |
           npm run build
         id: cache-build
+
+      - name: Test
+        run: |
+          npm run test
 
       - name: Release
         run: |
