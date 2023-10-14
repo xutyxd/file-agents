@@ -2,6 +2,7 @@
 export interface IReader {
     
     files(): Promise<{
+        uuid: string;
         name: string;
         lastModified: number;
         size: number;
