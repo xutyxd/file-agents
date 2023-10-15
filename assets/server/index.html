@@ -49,6 +49,7 @@
             const listFiles = async () => {
                 const filesContainer = document.querySelector('.files');
                 const files = await webReader.files();
+                filesContainer.innerHTML = '';
                 console.log('Files: ', files);
                 const htmlFiles = files.map(createFileNode);
 

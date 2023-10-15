@@ -4,14 +4,19 @@ type Readable = File & { uuid: string };
 
 export class ChromiumWebReader implements IReader {
 
-    private readables?: Promise<Readable[]> | Readable[];
+    private readables: Readable[] = [];
 
     constructor() { }
 
     private async list() {
-        const handles = await (window as any).showOpenFilePicker({ multiple: true }) as FileSystemFileHandle[];
+        const handler = await (window as any).showOpenFilePicker({ multiple: true }) as FileSystemFileHandle[];
 
-        const files = handles.map(async (handle) => {
+        const handlers = handler.filter((file) => {
+            const names = this.readables.map(({ name }) => name);
+            return !names.includes(file.name);
+        });
+
+        const files = handlers.map(async (handle) => {
             const uuid = crypto.randomUUID();
             const file = await handle.getFile();
 
@@ -23,23 +28,15 @@ export class ChromiumWebReader implements IReader {
             return file as (File & { uuid: string });
         });
 
-        this.readables = await Promise.all(files);
-
-        return this.readables;
+        return await Promise.all(files);
     }
 
     private get = async () => {
-        let readables = this.readables;
+        const files = await this.list();
 
-        if (!readables) {
-            readables = this.list();
-        }
+        files.forEach((readable) => this.readables.push(readable));
 
-        if (readables instanceof Promise) {
-            readables = await readables;
-        }
-
-        return readables;
+        return this.readables;
     }
 
     public async files() {
@@ -52,7 +49,7 @@ export class ChromiumWebReader implements IReader {
     }
 
     public async read(uuid: string, options: { start: number, end: number}) {
-        const readables = await this.get();
+        const readables = this.readables;
 
         const file = readables.find((readable) => readable.uuid === uuid);
 

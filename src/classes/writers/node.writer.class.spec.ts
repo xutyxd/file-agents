@@ -76,7 +76,7 @@ describe('NodeWriter class', () => {
             expect(result.message).toBe('File selected not found');
         });
 
-        it('should write', async () => {
+        it('should write a file', async () => {
             const nodeWriter = new NodeWriter('./test');
             const file = nodeWriter.create({ name: 'test.test' })
 

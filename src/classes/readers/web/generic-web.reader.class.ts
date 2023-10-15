@@ -4,7 +4,7 @@ type Readable = File & { uuid: string };
 
 export class GenericWebReader implements IReader {
 
-    private readables?: Promise<Readable[]> | Readable[];
+    private readables: Readable[] = [];
 
     constructor() { }
 
@@ -16,7 +16,11 @@ export class GenericWebReader implements IReader {
             
             input.onchange = () => {
                 const files = [ ...input.files as FileList ];
-                this.readables = files.map((file) => {
+                const newFiles = files.filter((file) => {
+                    const names = this.readables.map(({ name }) => name);
+                    return !names.includes(file.name);
+                })
+                const readables = newFiles.map((file) => {
                     const uuid = crypto.randomUUID();
         
                     Object.defineProperty(file, 'uuid', {
@@ -28,7 +32,7 @@ export class GenericWebReader implements IReader {
                 });
     
                 input.remove();
-                resolve(this.readables);
+                resolve(readables);
             }
     
             input.click();
@@ -37,17 +41,11 @@ export class GenericWebReader implements IReader {
     }
 
     private get = async () => {
-        let readables = this.readables;
+        const files = await this.list();
 
-        if (!readables) {
-            readables = this.list();
-        }
+        files.forEach((readable) => this.readables.push(readable));
 
-        if (readables instanceof Promise) {
-            readables = await readables;
-        }
-
-        return readables;
+        return this.readables;
     }
 
     public async files() {
@@ -60,7 +58,7 @@ export class GenericWebReader implements IReader {
     }
 
     public async read(uuid: string, options: { start: number, end: number}) {
-        const readables = await this.get();
+        const readables = this.readables;
 
         const file = readables.find((readable) => readable.uuid === uuid);
 

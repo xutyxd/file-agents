@@ -7,7 +7,7 @@ type Readable = Blob & { lastModified: number, uuid: string, name: string };
 
 export class NodeReader implements IReader {
 
-    private readables?: Promise<Readable[]> | Readable[];
+    private readables: Readable[] = [];
 
     constructor(private path = '.') { }
 
@@ -26,10 +26,14 @@ export class NodeReader implements IReader {
         }
 
         const files = readdirSync(where, { encoding: 'binary' });
-        const stats = files.map((file) => ({ path: join(where, file), stat: statSync(join(where, file)), name: file }));
+        const newFiles = files.filter((file) => {
+            const names = this.readables.map(({ name }) => name);
+            return !names.includes(file);
+        });
+        const stats = newFiles.map((file) => ({ path: join(where, file), stat: statSync(join(where, file)), name: file }));
         const fileStats = stats.filter(({ stat }) => stat.isFile());
 
-        this.readables = await Promise.all(fileStats.map(async ({ path, stat, name }) => {
+        const readables = await Promise.all(fileStats.map(async ({ path, stat, name }) => {
             const blob = await openAsBlob(path);
 
             Object.defineProperties(blob, {
@@ -50,21 +54,14 @@ export class NodeReader implements IReader {
             return blob as Readable;
         }));
 
-        return this.readables;
+        return readables;
     }
 
     private get = async () => {
-        let readables = this.readables;
+        const files = await this.list();
+        files.forEach((readable) => this.readables.push(readable));
 
-        if (!readables) {
-            readables = this.list();
-        }
-
-        if (readables instanceof Promise) {
-            readables = await readables;
-        }
-
-        return readables;
+        return this.readables;
     }
 
     public async files() {
@@ -78,7 +75,7 @@ export class NodeReader implements IReader {
     }
 
     public async read(uuid: string, options: { start: number, end: number}): Promise<Blob> {
-        const readables = await this.get();
+        const readables = this.readables;
 
         const file = readables.find((readable) => readable.uuid === uuid);
 
