@@ -1,43 +1,41 @@
 import { IWriter } from "../../../interfaces/writer.interface";
 
-export class ChromiumWebWriter implements IWriter<WriteParams['data']> {
+export class ChromiumWebWriter implements IWriter {
 
-    private writable?: Promise<FileSystemWritableFileStream> | FileSystemWritableFileStream;
+    private files: { uuid: string, writable: FileSystemWritableFileStream }[] = [];
 
-    constructor(private file: { size: number, name: string }) { }
+    constructor() { }
 
-    private async create() {
+    public async create(where: { path?: string, name: string, size: number }) {
 
-        const { name, size } = this.file;
+        const { name, size } = where;
         // Get folder
         const folder = await (window as any).showDirectoryPicker() as FileSystemDirectoryHandle; 
         // Get handle for file
         const fileHandler = await folder.getFileHandle(name, { create: true });
         // Get writable
-        this.writable = await fileHandler.createWritable({ keepExistingData: false });
+        const writable = await fileHandler.createWritable({ keepExistingData: false });
         // Truncate needed to avoid error on position that not exist
-        this.writable.truncate(size);
-        
-        return this.writable;
+        writable.truncate(size);
+
+        const file = { uuid: crypto.randomUUID(), writable };
+        this.files.push(file);
+
+        return file.uuid;
     }
 
-    private get = async () => {
-        let writable = this.writable;
-
-        if (!writable) {
-            writable = this.create();
-        }
-
-        if (writable instanceof Promise) {
-            writable = await writable;
-        }
-
-        return writable;
+    private get(uuid: string) {
+        return this.files.find((file) => file.uuid === uuid);
     }
 
-    public async write(data: WriteParams['data'], position: number) {
+    public async write(uuid: string, data: Blob, position: number) {
+        const file = this.get(uuid);
 
-        const writable = await this.get();
+        if (!file) {
+            throw new Error('File selected not found');
+        }
+
+        const { writable } = file;
 
         try {
             await writable.write({ type: 'write', position, data });
@@ -47,9 +45,15 @@ export class ChromiumWebWriter implements IWriter<WriteParams['data']> {
         }        
     }
 
-    public async close() {
+    public async close(uuid: string) {
 
-        const writable = await this.get();
+        const file = this.get(uuid);
+
+        if (!file) {
+            throw new Error('File selected not found');
+        }
+
+        const { writable } = file;
 
         try {
             await writable.close();

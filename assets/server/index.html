@@ -1,10 +1,10 @@
 <html>
     <head>
-        <script src="./scripts/web.js" type="module"></script>
         <script type="module">
-            import { WebReader, WebWriter } from './scripts/web.js';
+            import { WebReader, WebWriter } from './scripts/index.js';
 
-            let webReader, webWriter;
+            const webReader = new WebReader();
+            const webWriter = new WebWriter();
 
             const createFileNode = (file, index) => {
                 const fileContainer = document.createElement('div');
@@ -19,26 +19,27 @@
                 fileButton.textContent = 'Download';
                 fileButton.onclick = async () => {
                     console.log('File: ', file);
-                    const webWriter = new WebWriter({ name: file.name, size: file.size });
 
                     console.log('Writer ready!');
                     fileButton.remove();
 
                     // Start reading in a loop
-                    const { uuid } = file;
+                    const { uuid, name, size } = file;
+                    const toWrite = await webWriter.create({ name, size });
                     const chunkSize = 1e+7;
                     let finished = false;
                     let cursor = 0;
 
                     while(!finished) {
-                        const chunk = await webReader.read({ start: cursor, end: (cursor + chunkSize) }, uuid);
-                        await webWriter.write(chunk, cursor);
+                        const chunk = await webReader.read(uuid, { start: cursor, end: (cursor + chunkSize) });
+                        await webWriter.write(toWrite, chunk, cursor);
                         cursor += chunk.size;
 
                         finished = cursor >= file.size;
                     }
 
-                    webWriter.close();
+                    await webWriter.close(toWrite);
+                    console.log('File writted!');
                 }
 
                 [fileName, fileSize, fileButton].forEach((node) => fileContainer.append(node));
@@ -58,8 +59,8 @@
             const readerButton = document.createElement('button');
             readerButton.textContent = 'Read files';
 
-            readerButton.onclick = async () => {
-                webReader = new WebReader();
+            readerButton.onclick = () => {
+                console.log('Trying to list files...');
                 listFiles();
             }
 

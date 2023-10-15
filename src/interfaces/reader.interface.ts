@@ -9,5 +9,5 @@ export interface IReader {
         type: string;
     }[]>;
 
-    read(options: { start: number, end: number }, file?: string): Promise<Blob> | Blob;
+    read(uuid: string, options: { start: number, end: number }): Promise<Blob> | Blob;
 }

@@ -5,7 +5,6 @@ type Readable = File & { uuid: string };
 export class ChromiumWebReader implements IReader {
 
     private readables?: Promise<Readable[]> | Readable[];
-    private selected?: string;
 
     constructor() { }
 
@@ -52,14 +51,10 @@ export class ChromiumWebReader implements IReader {
         });
     }
 
-    public async read(options: { start: number, end: number}, selected = this.selected) {
-        if (!selected) {
-            throw new Error(`File not selected.`);
-        }
-
+    public async read(uuid: string, options: { start: number, end: number}) {
         const readables = await this.get();
 
-        const file = readables.find(({ uuid }) => uuid === selected);
+        const file = readables.find((readable) => readable.uuid === uuid);
 
         if (!file) {
             throw new Error('File selected not found on list.');

@@ -35,7 +35,14 @@
     "read",
     "write",
     "nodejs",
-    "web"
+    "web",
+    "hybrid",
+    "node",
+    "filesystem",
+    "files",
+    "fs",
+    "commonjs",
+    "es6"
   ],
   "author": "XutyXD",
   "license": "ISC",

@@ -1,5 +1,6 @@
 
-export interface IWriter<T> {
-    write: (data: T, position: number, where?: { path?: string, name: string }) => Promise<void> | void;
-    close: (where?: { path?: string, name: string }) => Promise<void> | void;
+export interface IWriter {
+    create: (where: { path?: string, name: string, size: number }) => Promise<string> | string;
+    write: (uuid: string, data: Blob, position: number) => Promise<void> | void;
+    close: (uuid: string) => Promise<void> | void;
 }

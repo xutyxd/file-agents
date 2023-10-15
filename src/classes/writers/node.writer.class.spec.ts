@@ -7,164 +7,109 @@ describe('NodeWriter class', () => {
     describe('NodeWriter instance', () => {
         it('should instance', async () => {
 
-            const nodeWriter = new NodeWriter({ name: 'test.test' }, './test');
+            const nodeWriter = new NodeWriter('./test');
 
             expect(nodeWriter).toBeInstanceOf(NodeWriter);
         });
 
         it('should instance without specified path', async () => {
-            const nodeWriter = new NodeWriter({ name: 'test.test' });
+            const nodeWriter = new NodeWriter();
 
             expect(nodeWriter).toBeInstanceOf(NodeWriter);
         });
     });
 
-    describe('NodeWriter write', () => {
-        it('should not write if a name is not defined', async () => {
-            const nodeWriter = new NodeWriter();
-            let error: Error | void;
-
-            const blob = new Blob([0, 1, 2, 3, 4] as unknown as BlobPart[]);
-            const arrayBuffer = await blob.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-
-            try {
-                error = await nodeWriter.write(buffer, 0);
-            } catch(e) {
-                error = e as Error;
-            }
-            
-            expect(error as Error).toBeInstanceOf(Error);
-            expect((error as Error).message).toBe('Needed a file name for the file. Specify at constructor or at write/close moment');
-        });
-
+    describe('NodeWriter create', () => {
         it('should throw an error if folder doesnt exists', async () => {
-            let result: NodeWriter | Error;
+            let result = new Error();
 
             try {
-                result = new NodeWriter({ name: 'test' }, 'assetss');
-                await result.write(Buffer.from([]), 0);
+                const writer = new NodeWriter('assetss');
+                writer.create({ name: 'test.test' });
             } catch(e) {
                 result = e as Error;
             }
             
-            expect((result as Error).message).toBe('Selected folder doesnt exists.');
+            expect(result.message).toBe('Selected folder doesnt exists.');
         });
 
         it ('should throw an error if folder is a file', async () => {
-            let result: NodeWriter | Error;
+            let result = new Error();
 
             try {
-                result = new NodeWriter({ name: 'test' }, `${assets}/video.mp4`);
-                await result.write(Buffer.from([]), 0);
+                const writer = new NodeWriter(`${assets}/video.mp4`);
+                writer.create({ name: 'test.test' });
             } catch(e) {
                 result = e as Error;
             }
             
-            expect((result as Error).message).toBe('Selected folder is not a folder.');
+            expect(result.message).toBe('Selected folder is not a folder.');
+        });
+
+        it('should create a file', () => {
+            const writer = new NodeWriter('./test');
+            const file = writer.create({ name: 'test-create.test' });
+
+            expect(file).toBeTruthy();
+        });
+
+        it('should create a file using path', () => {
+            const writer = new NodeWriter();
+            const file = writer.create({ name: 'test-create.test', path: './test' });
+
+            expect(file).toBeTruthy();
+        });
+    });
+    describe('NodeWriter write', () => {
+
+        it('should throw and error writing a non existent file', async () => {
+            const nodeWriter = new NodeWriter('./test');
+
+            let result = new Error();
+            try {
+                const result = await nodeWriter.write('file', new Blob(), 10);
+            } catch(e) {
+                result = e as Error;
+            }
+            
+
+            expect(result.message).toBe('File selected not found');
         });
 
         it('should write', async () => {
-            const nodeWriter = new NodeWriter({ name: 'test.test' }, './test');
+            const nodeWriter = new NodeWriter('./test');
+            const file = nodeWriter.create({ name: 'test.test' })
 
             const blob = new Blob([0, 1, 2, 3, 4] as unknown as BlobPart[]);
-            const arrayBuffer = await blob.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
 
-            await nodeWriter.write(buffer, 0);
+            await nodeWriter.write(file, blob, 0);
 
             const nodeReader = new NodeReader('./test');
 
             const files = await nodeReader.files();
             const { uuid } = files.find(({ name }) => name === 'test.test') as typeof files[number];
 
-            const readed = await nodeReader.read({ start: 0, end: 5 }, uuid);
+            const readed = await nodeReader.read(uuid, { start: 0, end: 5 });
             const text = await readed.text();
 
             expect(text).toBe('01234');
         });
 
         it('should write in the middle', async () => {
-            const nodeWriter = new NodeWriter({ name: 'test2.test' }, './test');
+            const nodeWriter = new NodeWriter('./test');
+            const file = nodeWriter.create({ name: 'test2.test' });
 
             const blob = new Blob([0, 1, 2, 3, 4] as unknown as BlobPart[]);
-            const arrayBuffer = await blob.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
 
-            await nodeWriter.write(buffer, 0);
-            await nodeWriter.write(buffer, 1);
+            await nodeWriter.write(file, blob, 0);
+            await nodeWriter.write(file, blob, 1);
 
             const nodeReader = new NodeReader('./test');
 
             const files = await nodeReader.files();
             const { uuid } = files.find(({ name }) => name === 'test2.test') as typeof files[number];
 
-            const readed = await nodeReader.read({ start: 0, end: 6 }, uuid);
-            const text = await readed.text();
-
-            expect(text).toBe('001234');
-        });
-
-        it('should write using where param', async () => {
-            const nodeWriter = new NodeWriter();
-
-            const blob = new Blob([0, 1, 2, 3, 4] as unknown as BlobPart[]);
-            const arrayBuffer = await blob.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            const where = { name: 'test3.test', path: './test' };
-
-            await nodeWriter.write(buffer, 0, where);
-
-            const nodeReader = new NodeReader('./test');
-
-            const files = await nodeReader.files();
-            const { uuid } = files.find(({ name }) => name === 'test3.test') as typeof files[number];
-
-            const readed = await nodeReader.read({ start: 0, end: 6 }, uuid);
-            const text = await readed.text();
-
-            expect(text).toBe('01234');
-        });
-
-        it('should write using where param twice in the middle', async () => {
-            const nodeWriter = new NodeWriter();
-
-            const blob = new Blob([0, 1, 2, 3, 4] as unknown as BlobPart[]);
-            const arrayBuffer = await blob.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            const where = { name: 'test4.test', path: './test' };
-
-            await nodeWriter.write(buffer, 0, where);
-            await nodeWriter.write(buffer, 1, where);
-
-            const nodeReader = new NodeReader('./test');
-
-            const files = await nodeReader.files();
-            const { uuid } = files.find(({ name }) => name === 'test4.test') as typeof files[number];
-
-            const readed = await nodeReader.read({ start: 0, end: 6 }, uuid);
-            const text = await readed.text();
-
-            expect(text).toBe('001234');
-        });
-
-        it('should write using where param without using path', async () => {
-            const nodeWriter = new NodeWriter({ name: ''}, './test');
-
-            const blob = new Blob([0, 1, 2, 3, 4] as unknown as BlobPart[]);
-            const arrayBuffer = await blob.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            const where = { name: 'test5.test' };
-
-            await nodeWriter.write(buffer, 0, where);
-            await nodeWriter.write(buffer, 1, where);
-
-            const nodeReader = new NodeReader('./test');
-
-            const files = await nodeReader.files();
-            const { uuid } = files.find(({ name }) => name === 'test5.test') as typeof files[number];
-
-            const readed = await nodeReader.read({ start: 0, end: 6 }, uuid);
+            const readed = await nodeReader.read(uuid, { start: 0, end: 6 });
             const text = await readed.text();
 
             expect(text).toBe('001234');
@@ -173,36 +118,41 @@ describe('NodeWriter class', () => {
 
     describe('NodeWriter close', () => {
         it('should throw an error if try to write on closed file', async () => {
-            const nodeWriter = new NodeWriter({ name: 'test.test' }, './test');
-
-            await nodeWriter.close();
+            const nodeWriter = new NodeWriter('./test');
+            const file = nodeWriter.create({ name: 'test3.test' });
+            await nodeWriter.close(file);
 
             const blob = new Blob([0, 1, 2, 3, 4] as unknown as BlobPart[]);
-            const arrayBuffer = await blob.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
 
             let result: void | Error;
 
             try {
-                result = await nodeWriter.write(buffer, 0);
+                result = await nodeWriter.write(file, blob, 0);
             } catch(e) {
                 result = e as Error;
             }
             
             expect((result as Error).message).toBe('EBADF: bad file descriptor, write');
         });
-        it('should close', async () => {
-            const nodeWriter = new NodeWriter({ name: 'test.test' }, './test');
 
-            const result = await nodeWriter.close();
+        it('should throw and error closing a non existent file', async () => {
+            const nodeWriter = new NodeWriter('./test');
 
-            expect(result).toBe(undefined);
+            let result = new Error();
+            try {
+                const result = await nodeWriter.close('file');
+            } catch(e) {
+                result = e as Error;
+            }
+            
+
+            expect(result.message).toBe('File selected not found');
         });
 
-        it('should close a file using where param', async () => {
-            const nodeWriter = new NodeWriter({ name: 'test.close' }, './test');
-
-            const result = await nodeWriter.close({ path: './test', name: 'test.close' });
+        it('should close', async () => {
+            const nodeWriter = new NodeWriter('./test');
+            const file = nodeWriter.create({ name: 'test4.test' });
+            const result = await nodeWriter.close(file);
 
             expect(result).toBe(undefined);
         });

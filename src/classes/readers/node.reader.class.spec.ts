@@ -46,20 +46,6 @@ describe('NodeReader class', () => {
             expect((result as Error).message).toBe('Selected folder is not a folder.');
         });
 
-        it ('should throw an error if file is not selected', async () => {
-            let result: NodeReader | Error;
-
-            try {
-                result = new NodeReader(`${assets}/video.mp4`);
-
-                await result.read({ start: 0, end: 15 });
-            } catch(e) {
-                result = e as Error;
-            }
-            
-            expect((result as Error).message).toBe('File not selected.');
-        });
-
         it('should get files', async () => {
             const nodeReader = new NodeReader(assets);
 
@@ -80,7 +66,7 @@ describe('NodeReader class', () => {
             let result: Blob | Error;
 
             try {
-                result = await nodeReader.read({ start: 0, end: 15 }, 'uuid');
+                result = await nodeReader.read('uuid', { start: 0, end: 15 });
             } catch(e) {
                 result = e as Error;
             }
@@ -90,7 +76,7 @@ describe('NodeReader class', () => {
         it('should read', async () => {
             const nodeReader = new NodeReader(assets);
             const [{ uuid }] = await nodeReader.files();
-            const blob = await nodeReader.read({ start: 0, end: 15 }, uuid);
+            const blob = await nodeReader.read(uuid, { start: 0, end: 15 });
 
             expect(blob.size).toBe(15);
         });

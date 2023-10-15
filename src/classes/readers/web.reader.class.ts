@@ -17,8 +17,8 @@ export class WebReader implements IReader {
         return this.reader.files();
     }
 
-    public read(options: { start: number, end: number}, uuid?: string) {
-        return this.reader.read(options, uuid);
+    public read(uuid: string, options: { start: number, end: number}) {
+        return this.reader.read(uuid, options);
     }
 
 }

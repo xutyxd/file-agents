@@ -1,44 +1,42 @@
 import { IWriter } from "../../../interfaces/writer.interface";
 
-export class GenericWebWriter implements IWriter<WriteParams['data']> {
+export class GenericWebWriter implements IWriter {
 
-    private folder!: FileSystemDirectoryHandle;
-    private writable?: Promise<FileSystemWritableFileStream> | FileSystemWritableFileStream;
+    private files: { uuid: string, writable: FileSystemWritableFileStream, folder: FileSystemDirectoryHandle, name: string }[] = [];
 
-    constructor(private file: { size: number, name: string }) { }
+    constructor() { }
 
-    private async create(): Promise<FileSystemWritableFileStream> {
+    public async create(where: { path?: string, name: string, size: number }): Promise<string> {
 
-        const { name, size } = this.file;
+        const { name, size } = where;
         // Get folder
-        const folder = this.folder = await navigator.storage.getDirectory();
+        const folder = await navigator.storage.getDirectory();
         // Get handle for file
         const fileHandler = await folder.getFileHandle(name, { create: true });
         // Get writable
-        this.writable = await fileHandler.createWritable({ keepExistingData: false });
+        const writable = await fileHandler.createWritable({ keepExistingData: false });
         // Truncate needed to avoid error on position that not exist
-        this.writable.truncate(size);
+        writable.truncate(size);
 
-        return this.writable;
+        const file = { uuid: crypto.randomUUID(), writable, folder, name };
+        this.files.push(file);
+
+        return file.uuid;
     }
 
-    private get = async () => {
-        let writable = this.writable;
-
-        if (!writable) {
-            writable = this.create();
-        }
-
-        if (writable instanceof Promise) {
-            writable = await writable;
-        }
-
-        return writable;
+    private get(uuid: string) {
+        return this.files.find((file) => file.uuid === uuid);
     }
 
 
-    public async write(data: WriteParams['data'], position: number, where?: { path?: string, name: string }) {
-        const writable = await this.get();
+    public async write(uuid: string, data: Blob, position: number) {
+        const file = this.get(uuid);
+
+        if (!file) {
+            throw new Error('File selected not found');
+        }
+
+        const { writable } = file;
 
         try {
             await writable.write({ type: 'write', position, data });
@@ -48,8 +46,14 @@ export class GenericWebWriter implements IWriter<WriteParams['data']> {
         } 
     };
 
-    public async close() {
-        const writable = await this.get();
+    public async close(uuid: string) {
+        const file = this.get(uuid);
+
+        if (!file) {
+            throw new Error('File selected not found');
+        }
+
+        const { writable, folder, name } = file;
 
         try {
             await writable.close();
@@ -59,7 +63,7 @@ export class GenericWebWriter implements IWriter<WriteParams['data']> {
         }
 
         try {
-            const fileHandler = await this.folder.getFileHandle(this.file.name, { create: false });
+            const fileHandler = await folder.getFileHandle(name, { create: false });
             const file = await fileHandler.getFile();
             const blob = file.slice(0, file.size);
 
@@ -67,7 +71,7 @@ export class GenericWebWriter implements IWriter<WriteParams['data']> {
 
             const a = document.createElement('a');
             a.href = url;
-            a.download = this.file.name;
+            a.download = name;
             a.style.display = 'none';
             document.body.append(a);
             // Programmatically click the element.

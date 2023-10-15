@@ -8,7 +8,6 @@ type Readable = Blob & { lastModified: number, uuid: string, name: string };
 export class NodeReader implements IReader {
 
     private readables?: Promise<Readable[]> | Readable[];
-    private selected?: string;
 
     constructor(private path = '.') { }
 
@@ -78,14 +77,10 @@ export class NodeReader implements IReader {
         });
     }
 
-    public async read(options: { start: number, end: number}, selected = this.selected): Promise<Blob> {
-        if (!selected) {
-            throw new Error(`File not selected.`);
-        }
-
+    public async read(uuid: string, options: { start: number, end: number}): Promise<Blob> {
         const readables = await this.get();
 
-        const file = readables.find(({ uuid }) => uuid === selected);
+        const file = readables.find((readable) => readable.uuid === uuid);
 
         if (!file) {
             throw new Error('File selected not found on list.');
