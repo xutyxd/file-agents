@@ -1,9 +1,11 @@
-# File Agents
+# File Agents ![NPM Downloads](https://img.shields.io/npm/dw/file-agents)
 
 The objetive of the repository is to provide classes to read and write with the same interface for Node and Web.
 
-#### NPM package
-https://www.npmjs.com/package/file-agents
+#### NPM installation
+```
+npm install file-agents
+```
 
 
 ## Description

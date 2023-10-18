@@ -60,8 +60,7 @@ export class ChromiumWebReader implements IReader {
         const { start, end } = options;
         
         let blob = file.slice(start, end);
-        // Maybe a bug in Chromium
-        // Reading last bytes always returns 0
+        // Reading last bytes always returns 0 idk
         if (blob.size === 0) {
             blob = file.slice(start);
         }
