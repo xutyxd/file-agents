@@ -85,6 +85,12 @@ export class NodeReader implements IReader {
 
         const { start, end } = options;
         
-        return file.slice(start, end);
+        let blob = file.slice(start, end);
+        // Reading last bytes always returns 0 idk
+        if (blob.size === 0) {
+            blob = file.slice(start);
+        }
+
+        return blob;
     }
 }
