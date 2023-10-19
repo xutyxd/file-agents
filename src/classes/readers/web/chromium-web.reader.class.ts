@@ -32,9 +32,12 @@ export class ChromiumWebReader implements IReader {
     }
 
     private get = async () => {
-        const files = await this.list();
+        try {
+            const files = await this.list();
 
-        files.forEach((readable) => this.readables.push(readable));
+            files.forEach((readable) => this.readables.push(readable));
+        } catch { } // User cancelled pick files
+        
 
         return this.readables;
     }
