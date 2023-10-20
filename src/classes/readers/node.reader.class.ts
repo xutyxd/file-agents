@@ -1,9 +1,10 @@
-import { readdirSync, statSync, openAsBlob, existsSync } from 'fs';
+import { readdirSync, statSync, openAsBlob, existsSync, read } from 'fs';
+import { open } from 'fs/promises';
 import { join } from 'path';
 
 import { IReader } from "../../interfaces/reader.interface";
 
-type Readable = Blob & { lastModified: number, uuid: string, name: string };
+type Readable = { lastModified: number, uuid: string, size: number, name: string, type: string, slice: (start: number, end: number) => Promise<Blob> };
 
 export class NodeReader implements IReader {
 
@@ -34,28 +35,21 @@ export class NodeReader implements IReader {
         const fileStats = stats.filter(({ stat }) => stat.isFile());
 
         const readables = await Promise.all(fileStats.map(async ({ path, stat, name }) => {
-            const blob = await openAsBlob(path);
-
-            Object.defineProperties(blob, {
-                lastModified: {
-                  value: Math.round(stat.mtimeMs),
-                  writable: false,
-                },
-                name: {
-                    value: name,
-                    writable: false
-                },
-                size: {
-                    value: stat.size,
-                    writable: false
-                },
-                uuid: {
-                    value: crypto.randomUUID(),
-                    writable: false
+            const handle = await open(path, 'r');
+            const blob: Readable = {
+                lastModified: Math.round(stat.mtimeMs),
+                name,
+                size: stat.size,
+                uuid: crypto.randomUUID(),
+                type: '',
+                slice: async (start, end) => {
+                    const readed = Buffer.alloc(end - start);
+                    await handle.read(readed, 0, end - start, start);
+                    return new Blob([ readed ]);
                 }
-              });
+            };
 
-            return blob as Readable;
+            return blob;
         }));
 
         return readables;
@@ -88,12 +82,8 @@ export class NodeReader implements IReader {
         }
 
         const { start, end } = options;
-        
-        let blob = file.slice(start, end);
-        // Reading last bytes always returns 0 idk
-        if (blob.size === 0) {
-            blob = file.slice(start);
-        }
+
+        const blob = await file.slice(start, end);
 
         return blob;
     }
