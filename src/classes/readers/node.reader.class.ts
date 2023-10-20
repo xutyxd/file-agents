@@ -45,6 +45,10 @@ export class NodeReader implements IReader {
                     value: name,
                     writable: false
                 },
+                size: {
+                    value: stat.size,
+                    writable: false
+                },
                 uuid: {
                     value: crypto.randomUUID(),
                     writable: false
