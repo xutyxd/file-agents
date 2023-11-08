@@ -16,65 +16,6 @@ Web includes two subagents to allow support propietary implementation on Chromiu
 
 This package is distributed with support for `MJS` and `CommonJS`
 
-## Configuration for web
-It requires a framework that allow the use of Top Level Await
-
-### Angular configuration
-One solution is use custom builder of webpack
-Extracted from: https://www.digitalocean.com/community/tutorials/angular-custom-webpack-config
-```
-npm install --save-dev @angular-builders/custom-webpack
-```
-
-Configure it in `angular.json`
-COnfiguration to build
-```json
-"architect": {
-  "build": {
-    "builder": "@angular-builders/custom-webpack:browser",
-    "options": {
-      "customWebpackConfig": {
-        "path": "./custom-webpack.config.js",
-        "replaceDuplicatePlugins": true
-      },
-      // ...
-    },
-    // ...
-  },
-  // ...
-}
-```
-Configuration to serve
-```json
-"architect": {
-  // ...
-  "serve": {
-    "builder": "@angular-builders/custom-webpack:dev-server",
-     // ...
-  },
-  // ...
-}
-```
-
-Create a file called as setted in `angular.json` in this case `custom-webpack.config.js`
-
-And add following:
-```js
-module.exports = {
-  experiments: {
-    topLevelAwait: true
-  },
-  resolve: {
-    fallback: {
-      "path": false,
-      "fs": false,
-      "fs/promises": false
-    }
-  }
-}
-```
-
-
 ## Examples
 
 ### Web
