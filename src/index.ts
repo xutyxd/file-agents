@@ -15,7 +15,7 @@ let NodeWriter: typeof INodeWriter;
 if (isNode) {
     const get = require || createRequire && createRequire(eval(`import.meta.url`));
     const { NodeReader: Reader } = (isNode && get('./classes/readers/node.reader.class.js'));
-    const { NodeWriter: Writer } = (isNode && get('./classes/readers/node.writer.class.js'));
+    const { NodeWriter: Writer } = (isNode && get('./classes/writers/node.writer.class.js'));
     NodeReader = Reader;
     NodeWriter = Writer;
 }
